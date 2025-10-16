@@ -3,6 +3,10 @@ package_name: uv
 github_repo: astral-sh/uv
 artifact_format: tar.gz
 
+# Performance: Parallel builds enabled by default (v1.1+)
+# parallel_builds: true    # Default: true
+# max_parallel: 2          # Default: 2 (GitHub Actions standard)
+
 # Debian distributions to build for
 debian_distributions:
   - bookworm
