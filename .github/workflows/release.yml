@@ -39,7 +39,7 @@ jobs:
       - name: Build uv
         uses: ranjithrajv/debian-multiarch-builder@v.0.1a1
         with:
-          config-file: 'multiarch-config.yaml'
+          config-file: 'package.yaml'
           version: ${{ inputs.uv_version }}
           build-version: ${{ inputs.build_version }}
           architecture: ${{ inputs.architecture }}
