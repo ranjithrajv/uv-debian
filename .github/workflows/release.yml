@@ -24,6 +24,10 @@ on:
           - 'ppc64el'
           - 's390x'
           - 'riscv64'
+      enable_lintian:
+        description: Enable lintian validation
+        type: boolean
+        default: true
 
 permissions:
   contents: write
@@ -43,7 +47,26 @@ jobs:
           version: ${{ inputs.uv_version }}
           build-version: ${{ inputs.build_version }}
           architecture: ${{ inputs.architecture }}
-      
+          lintian-check: ${{ inputs.enable_lintian }}
+
+      - name: Display build summary
+        if: always()
+        run: |
+          echo "=== Build Summary ==="
+          if [ -f build-summary.json ]; then
+            cat build-summary.json | jq '.'
+          else
+            echo "No build-summary.json found"
+          fi
+
+      - name: Display lintian results
+        if: inputs.enable_lintian && always()
+        run: |
+          echo "=== Lintian Results ==="
+          if [ -f build-summary.json ]; then
+            cat build-summary.json | jq '.lintian'
+          fi
+
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
