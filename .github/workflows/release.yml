@@ -4,15 +4,16 @@ on:
   workflow_dispatch:
     inputs:
       uv_version:
-        description: The version of uv to build.
+        description: The version of uv to build (e.g. 0.6.3)
         type: string
         required: true
       build_version:
-        description: The build version.
+        description: Debian build revision (e.g. 1)
         type: string
         required: true
+        default: '1'
       architecture:
-        description: Architecture to build (amd64, arm64, armel, armhf, ppc64el, s390x, riscv64, or 'all' for all architectures)
+        description: Architecture to build (or 'all')
         type: choice
         default: 'all'
         options:
@@ -35,13 +36,16 @@ permissions:
 jobs:
   build-uv:
     name: Build
-    runs-on: ubuntu-latest    
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout uv-debian
+      - name: Checkout
         uses: actions/checkout@v4
 
+      # Auto-discovery mode: package.yaml only specifies the upstream repo and
+      # artifact format — architectures, distributions, and download patterns
+      # are all resolved automatically from GitHub releases and system defaults.
       - name: Build uv
-        uses: ranjithrajv/debian-multiarch-builder@main
+        uses: ranjithrajv/debian-multiarch-builder@v.0.1a3
         with:
           config-file: 'package.yaml'
           version: ${{ inputs.uv_version }}
@@ -49,47 +53,29 @@ jobs:
           architecture: ${{ inputs.architecture }}
           lintian-check: ${{ inputs.enable_lintian }}
 
-      - name: Display build summary
-        if: always()
-        run: |
-          echo "=== Build Summary ==="
-          if [ -f build-summary.json ]; then
-            cat build-summary.json | jq '.'
-          else
-            echo "No build-summary.json found"
-          fi
-
-      - name: Display lintian results
-        if: inputs.enable_lintian && always()
-        run: |
-          echo "=== Lintian Results ==="
-          if [ -f build-summary.json ]; then
-            cat build-summary.json | jq '.lintian'
-          fi
-
-      - name: Upload Artifact
+      - name: Upload packages
         uses: actions/upload-artifact@v4
         with:
-          name: artifact
+          name: uv-debian-packages
           path: uv_*.deb
-
+          if-no-files-found: error
 
   release-uv:
-    name: (Draft-)Release uv for Debian
-    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
+    name: Draft Release
+    if: github.ref == 'refs/heads/main'
     needs: build-uv
+    runs-on: ubuntu-latest
     steps:
-      - name: Download All Artifacts
+      - name: Download packages
         uses: actions/download-artifact@v4
         with:
-          name: artifact
+          name: uv-debian-packages
 
-      - name: Publish Release Draft
+      - name: Publish draft release
         uses: softprops/action-gh-release@v2
         with:
           draft: true
-          files: uv_*.deb
+          tag_name: ${{ inputs.uv_version }}+${{ inputs.build_version }}
           name: ${{ inputs.uv_version }}+${{ inputs.build_version }}
-          tag_name: ${{ env.RELEASE_TAG }}
+          files: uv_*.deb
           fail_on_unmatched_files: true
