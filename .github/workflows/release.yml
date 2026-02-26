@@ -45,7 +45,7 @@ jobs:
       # artifact format — architectures, distributions, and download patterns
       # are all resolved automatically from GitHub releases and system defaults.
       - name: Build uv
-        uses: ranjithrajv/debian-multiarch-builder@v.0.1a3.1
+        uses: ranjithrajv/debian-multiarch-builder@v.0.1a3.2
         with:
           config-file: 'package.yaml'
           version: ${{ inputs.uv_version }}
