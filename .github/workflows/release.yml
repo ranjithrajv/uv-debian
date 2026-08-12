@@ -45,13 +45,15 @@ jobs:
       # artifact format — architectures, distributions, and download patterns
       # are all resolved automatically from GitHub releases and system defaults.
       - name: Build uv
-        uses: ranjithrajv/debian-multiarch-builder@v.0.1a4.2
+        uses: ranjithrajv/debian-multiarch-builder@v.0.1a7
         with:
           config-file: 'package.yaml'
           version: ${{ inputs.uv_version }}
           build-version: ${{ inputs.build_version }}
           architecture: ${{ inputs.architecture }}
           lintian-check: ${{ inputs.enable_lintian }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload packages
         uses: actions/upload-artifact@v4
